@@ -61,23 +61,45 @@ import {
   TooltipTrigger,
   TooltipProvider,
 } from "@/components/ui/tooltip";
-
+import axios from "axios";
 export default function Dashboard() {
   const [selectedModels, setSelectedModels] = useState([]);
-  const [inputValues, setInputValues] = useState({});
+  const [inputValues, setInputValues] = useState([]);
+  const [selectedsubmodels, setselectedsubmodels] = useState([]);
   const [sliderValues, setSliderValues] = useState({
-    temperature: 33,
-    topP: 33,
-    topK: 33,
-    maxLength: 33,
-    frequencyPenalty: 33,
-    presencePenalty: 33,
+    temperature: 0.3,
+    topP: 0.3,
+    topK: 0.3,
+    maxLength: 0.3,
+    frequencyPenalty: 0.3,
+    presencePenalty: 0.3,
   });
   const [Prompt, setPrompt] = useState({
     system: "",
     user: "",
   });
-  const [finalInput, setFinalInput] = useState({});
+  const [output, setoutput] = useState([]);
+  const [isFirstDialogOpen, setFirstDialogOpen] = useState(false);
+  const [isSecondDialogOpen, setSecondDialogOpen] = useState(false);
+
+  
+
+  const handleFirstDialogSubmit = () => {
+    setFirstDialogOpen(false);
+    for(let i ; i<selectedModels.length;i++)
+      {
+        if(selectedModels[i]=="OPENAI"){
+          setselectedsubmodels(["GPT-3.5-TURBO","GPT-4o","GPT-4-TURBO"])
+        }
+        if(selectedModels[i]=="ANTHROPIC"){
+          setselectedsubmodels(["ANTHROPIC-1","ANTHROPIC-2","ANTHROPIC-3"])
+        }
+        if(selectedModels[i]=="DEEPMIND"){
+          setselectedsubmodels(["DEEPMIND-1","DEEPMIND-2","DEEPMIND-3"])
+        }
+      }
+    setSecondDialogOpen(true);
+  };
 
   const handleCheckboxChange = (model) => {
     setSelectedModels((prevSelectedModels) => {
@@ -89,12 +111,12 @@ export default function Dashboard() {
     });
   };
   const handleFinalInput = () => {
-    setFinalInput({
+    return {
+      key: inputValues,
       model: selectedModels,
-      input: inputValues,
-      slider: sliderValues,
       prompt: Prompt,
-    });
+      slider: sliderValues,
+    };
   };
   const handlePromptChange = (name, value) => {
     setPrompt((prevState) => ({
@@ -109,16 +131,19 @@ export default function Dashboard() {
     }));
   };
   const handleInputChange = (model, value) => {
-    setInputValues((prevInputValues) => ({
-      ...prevInputValues,
-      [model]: value,
-    }));
+    setInputValues([value]);
   };
 
-  const handleSubmission = () => {
-    // Here you can use the selectedModels state for further processing
-    console.log("Selected Models:", selectedModels);
-    console.log("Input Values:", inputValues);
+  const handleRequest = async () => {
+    try {
+      const final = handleFinalInput();
+      console.log(final);
+      const response = await axios.post("/api/openai", { final });
+      console.log(response.data);
+      setoutput(response.data);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -210,6 +235,7 @@ export default function Dashboard() {
                   <Settings2 className="size-5" />
                 </Button>
               </TooltipTrigger>
+
               <TooltipContent side="right" sideOffset={5}>
                 Settings
               </TooltipContent>
@@ -401,7 +427,7 @@ export default function Dashboard() {
                 </legend>
                 <div className="grid gap-3">
                   <Label htmlFor="model">Model</Label>
-                  <Dialog>
+                  {/* <Dialog>
                     <DialogTrigger asChild>
                       <Button variant="outline">Select Model</Button>
                     </DialogTrigger>
@@ -415,7 +441,7 @@ export default function Dashboard() {
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id="terms1"
-                          onClick={() => handleCheckboxChange("GPT-3.5-TURBO")}
+                          onClick={() => handleCheckboxChange("gpt-3.5-turbo")}
                         />
                         <label
                           htmlFor="terms1"
@@ -427,25 +453,25 @@ export default function Dashboard() {
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id="terms2"
-                          onClick={() => handleCheckboxChange("GEMINI-1.5-PRO")}
+                          onClick={() => handleCheckboxChange("gpt-4o")}
                         />
                         <label
                           htmlFor="terms2"
                           className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
-                          GEMINI-1.5-PRO
+                          GPT-4o
                         </label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id="terms3"
-                          onClick={() => handleCheckboxChange("CLAUDE")}
+                          onClick={() => handleCheckboxChange("GPT-4-TURBO")}
                         />
                         <label
                           htmlFor="terms3"
                           className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
-                          CLAUDE
+                          GPT-4-TURBO
                         </label>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -461,16 +487,110 @@ export default function Dashboard() {
                         </label>
                       </div>
                       <DialogClose asChild>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          onClick={handleSubmission}
-                        >
+                        <Button type="button" variant="secondary">
                           Submit
                         </Button>
                       </DialogClose>
                     </DialogContent>
-                  </Dialog>
+                  </Dialog> */}
+                   <Dialog open={ isFirstDialogOpen} onOpenChange={setFirstDialogOpen  }>
+        <DialogTrigger asChild>
+          <Button variant="outline" onClick={() => setFirstDialogOpen(true)}>
+            Select Model
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Choose Model</DialogTitle>
+            <DialogDescription>
+              Choose your one or more model you want to compare.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="terms1"
+              onClick={() => handleCheckboxChange("OPENAI")}
+            />
+            <label
+              htmlFor="terms1"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              GPT-3.5-TURBO
+            </label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="terms2"
+              onClick={() => handleCheckboxChange("ANTHROPIC")}
+            />
+            <label
+              htmlFor="terms2"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              GPT-4o
+            </label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="terms3"
+              onClick={() => handleCheckboxChange("DEEPMIND")}
+            />
+            <label
+              htmlFor="terms3"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              GPT-4-TURBO
+            </label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="terms4"
+              onClick={() => handleCheckboxChange("ANTHROPIC")}
+            />
+            <label
+              htmlFor="terms4"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              ANTHROPIC
+            </label>
+          </div>
+          <DialogClose asChild>
+            <Button type="button" variant="secondary" onClick={handleFirstDialogSubmit }>
+              Submit
+            </Button>
+          </DialogClose>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isSecondDialogOpen} onOpenChange={setSecondDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Second Dialog</DialogTitle>
+            <DialogDescription>
+              This is the second dialog that opens after the first one is closed.         
+            </DialogDescription>
+          </DialogHeader>
+          {selectedsubmodels.map((item, index) => (
+          <div key={index} className="flex items-center space-x-2">
+            <Checkbox
+              id="terms1"
+              // onClick={() => handleCheckboxChange("gpt-3.5-turbo")}
+            />
+            <label
+              htmlFor="terms1"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              {item}
+            </label>
+          </div>
+          ))}
+          <DialogClose asChild>
+            <Button type="button" variant="secondary" onClick={ () => setSecondDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogClose>
+        </DialogContent>
+      </Dialog>
                 </div>
                 <Label htmlFor="model">Credentials</Label>
                 <Dialog>
@@ -501,11 +621,7 @@ export default function Dashboard() {
                     {/* <DialogFooter className="sm:justify-start"> */}
                     {/* <DialogClose asChild> */}
                     <DialogClose asChild>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={handleSubmission}
-                      >
+                      <Button type="button" variant="secondary">
                         Submit
                       </Button>
                     </DialogClose>
@@ -515,12 +631,13 @@ export default function Dashboard() {
                 </Dialog>
                 <div className="grid gap-3">
                   <Label htmlFor="temperature">
-                    Temperature : {sliderValues.temperature}
+                    Temperature{" "}
+                    <span className="ml-80"> {sliderValues.temperature}</span>
                   </Label>
                   <Slider
-                    defaultValue={[33]}
-                    max={100}
-                    step={1}
+                    defaultValue={[0.3]}
+                    max={2}
+                    step={0.1}
                     onValueChange={(value) =>
                       handleSlider("temperature", value)
                     }
@@ -528,21 +645,25 @@ export default function Dashboard() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-3">
-                    <Label htmlFor="top-p">Top P : {sliderValues.topP}</Label>
+                    <Label htmlFor="top-p">
+                      Top P <span className="ml-36"> {sliderValues.topP}</span>
+                    </Label>
 
                     <Slider
-                      defaultValue={[33]}
-                      max={100}
-                      step={1}
+                      defaultValue={[0.3]}
+                      max={1}
+                      step={0.1}
                       onValueChange={(value) => handleSlider("topP", value)}
                     />
                   </div>
                   <div className="grid gap-3">
-                    <Label htmlFor="top-k">Top K : {sliderValues.topK}</Label>
+                    <Label htmlFor="top-k">
+                      Top K <span className="ml-36"> {sliderValues.topK}</span>
+                    </Label>
                     <Slider
-                      defaultValue={[33]}
-                      max={100}
-                      step={1}
+                      defaultValue={[0.3]}
+                      max={1}
+                      step={0.1}
                       onValueChange={(value) => handleSlider("topK", value)}
                     />
                   </div>
@@ -550,11 +671,12 @@ export default function Dashboard() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-3">
                     <Label htmlFor="top-p">
-                      Max Length : {sliderValues.maxLength}
+                      Max Length{" "}
+                      <span className="ml-24"> {sliderValues.maxLength}</span>
                     </Label>
                     <Slider
                       defaultValue={[33]}
-                      max={100}
+                      max={4095}
                       step={1}
                       onValueChange={(value) =>
                         handleSlider("maxLength", value)
@@ -563,12 +685,16 @@ export default function Dashboard() {
                   </div>
                   <div className="grid gap-3">
                     <Label htmlFor="top-k">
-                      Frequency penalty : {sliderValues.frequencyPenalty}
+                      Frequency penalty{" "}
+                      <span className="ml-16">
+                        {" "}
+                        {sliderValues.frequencyPenalty}
+                      </span>
                     </Label>
                     <Slider
-                      defaultValue={[33]}
-                      max={100}
-                      step={1}
+                      defaultValue={[0.3]}
+                      max={2}
+                      step={0.1}
                       onValueChange={(value) =>
                         handleSlider("frequencyPenalty", value)
                       }
@@ -578,12 +704,16 @@ export default function Dashboard() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-3">
                     <Label htmlFor="top-p">
-                      Presence penalty : {sliderValues.presencePenalty}
+                      Presence penalty{" "}
+                      <span className="ml-16">
+                        {" "}
+                        {sliderValues.presencePenalty}
+                      </span>
                     </Label>
                     <Slider
-                      defaultValue={[33]}
-                      max={100}
-                      step={1}
+                      defaultValue={[0.3]}
+                      max={2}
+                      step={0.1}
                       onValueChange={(value) =>
                         handleSlider("presencePenalty", value)
                       }
@@ -627,24 +757,24 @@ export default function Dashboard() {
               Output
             </Badge>
             <div className="grid gap-2 grid-cols-2    max-h-[70vh] overflow-auto">
-              {selectedModels.map((item, index) => (
-                <ScrollArea
-                  key={index}
+            {
+                    output.map((item, index) => (
+                <ScrollArea key={index}
                   className="h-[200px] w-[350px] rounded-md border p-4"
                 >
                   <p className="scroll-m-20 border-b pb-2 text-2xl font-semibold tracking-tight first:mt-0">
-                    {item}
+                    {selectedModels[index]}
                   </p>
-                  <p className="leading-7 [&:not(:first-child)]:mt-6">
-                    The king, seeing how much happier his subjects were,
-                    realized the error of his ways and repealed the joke tax.
-                  </p>
+                  
+                      <p  className="leading-7">
+                        {item}
+                      </p>
                 </ScrollArea>
               ))}
             </div>
 
             <div className="flex-1" />
-            <form
+            <div
               className="relative overflow-hidden rounded-lg border bg-background focus-within:ring-1 focus-within:ring-ring"
               x-chunk="dashboard-03-chunk-1"
             >
@@ -680,12 +810,17 @@ export default function Dashboard() {
                     <TooltipContent side="top">Use Microphone</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-                <Button type="submit" size="sm" className="ml-auto gap-1.5">
+                <Button
+                  type="submit"
+                  size="sm"
+                  className="ml-auto gap-1.5"
+                  onClick={handleRequest}
+                >
                   Send Message
                   <CornerDownLeft className="size-3.5" />
                 </Button>
               </div>
-            </form>
+            </div>
           </div>
         </main>
       </div>
