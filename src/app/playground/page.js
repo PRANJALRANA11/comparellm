@@ -66,13 +66,14 @@ export default function Dashboard() {
   const [selectedModels, setSelectedModels] = useState([]);
   const [inputValues, setInputValues] = useState([]);
   const [selectedsubmodels, setselectedsubmodels] = useState([]);
+  const [selectedmodelsfinal, setselectedmodelsfinal] = useState([]);
   const [sliderValues, setSliderValues] = useState({
-    temperature: 0.3,
-    topP: 0.3,
-    topK: 0.3,
-    maxLength: 0.3,
-    frequencyPenalty: 0.3,
-    presencePenalty: 0.3,
+    temperature: [0.3],
+    topP: [0.3],
+    topK: [1],
+    maxLength: [100],
+    frequencyPenalty: [0.3],
+    presencePenalty: [0.3],
   });
   const [Prompt, setPrompt] = useState({
     system: "",
@@ -86,16 +87,18 @@ export default function Dashboard() {
 
   const handleFirstDialogSubmit = () => {
     setFirstDialogOpen(false);
-    for(let i ; i<selectedModels.length;i++)
+   
+    for(let i=0 ; i<selectedModels.length;i++)
       {
+        console.log(selectedModels[i])
         if(selectedModels[i]=="OPENAI"){
-          setselectedsubmodels(["GPT-3.5-TURBO","GPT-4o","GPT-4-TURBO"])
+         setselectedsubmodels(prev=>[...prev,"gpt-3.5-turbo","gpt-4o","gpt-4-turbo"])
         }
         if(selectedModels[i]=="ANTHROPIC"){
-          setselectedsubmodels(["ANTHROPIC-1","ANTHROPIC-2","ANTHROPIC-3"])
+         setselectedsubmodels(prev=>[...prev,"claude-3-opus-20240229","claude-3-sonnet-20240229","claude-3-haiku-20240307"])
         }
-        if(selectedModels[i]=="DEEPMIND"){
-          setselectedsubmodels(["DEEPMIND-1","DEEPMIND-2","DEEPMIND-3"])
+        if(selectedModels[i]=="GOOGLEAI"){
+         setselectedsubmodels(prev=>[...prev,"gemini-1.0-pro"])
         }
       }
     setSecondDialogOpen(true);
@@ -110,10 +113,21 @@ export default function Dashboard() {
       }
     });
   };
+  const handleSubCheckboxChange = (model) => {
+    setselectedmodelsfinal((prevSelectedModels) => {
+      if (prevSelectedModels.includes(model)) {
+        return prevSelectedModels.filter((item) => item !== model);
+      }
+      else {
+        return [...prevSelectedModels, model];
+      }
+
+    });
+  }
   const handleFinalInput = () => {
     return {
       key: inputValues,
-      model: selectedModels,
+      model: selectedmodelsfinal,
       prompt: Prompt,
       slider: sliderValues,
     };
@@ -131,16 +145,28 @@ export default function Dashboard() {
     }));
   };
   const handleInputChange = (model, value) => {
-    setInputValues([value]);
+    setInputValues(prev => [...prev,value]);
   };
 
   const handleRequest = async () => {
     try {
       const final = handleFinalInput();
       console.log(final);
-      const response = await axios.post("/api/openai", { final });
+      for(let i=0;i<selectedsubmodels.length;i++){
+        if(selectedModels[i]=="GOOGLEAI"){
+      const response = await axios.post("/api/googleai", { final });
       console.log(response.data);
-      setoutput(response.data);
+      setoutput(prev => [...prev , response.data]);
+        }if(selectedModels[i]=="ANTHROPIC"){
+          const response = await axios.post("/api/anthropic", { final });
+          console.log(response.data);
+          setoutput(prev => [...prev , response.data]);
+      }if(selectedModels[i]=="OPENAI"){
+        const response = await axios.post("/api/openai", { final });
+        console.log(response.data);
+        setoutput(prev => [...prev , response.data]);
+      }
+    }
     } catch (error) {
       console.error(error);
     }
@@ -427,72 +453,6 @@ export default function Dashboard() {
                 </legend>
                 <div className="grid gap-3">
                   <Label htmlFor="model">Model</Label>
-                  {/* <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline">Select Model</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Choose Model</DialogTitle>
-                        <DialogDescription>
-                          Choose your one or more model you want to compare.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="terms1"
-                          onClick={() => handleCheckboxChange("gpt-3.5-turbo")}
-                        />
-                        <label
-                          htmlFor="terms1"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          GPT-3.5-TURBO
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="terms2"
-                          onClick={() => handleCheckboxChange("gpt-4o")}
-                        />
-                        <label
-                          htmlFor="terms2"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          GPT-4o
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="terms3"
-                          onClick={() => handleCheckboxChange("GPT-4-TURBO")}
-                        />
-                        <label
-                          htmlFor="terms3"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          GPT-4-TURBO
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="terms4"
-                          onClick={() => handleCheckboxChange(" ANTHROPIC")}
-                        />
-                        <label
-                          htmlFor="terms4"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          ANTHROPIC
-                        </label>
-                      </div>
-                      <DialogClose asChild>
-                        <Button type="button" variant="secondary">
-                          Submit
-                        </Button>
-                      </DialogClose>
-                    </DialogContent>
-                  </Dialog> */}
                    <Dialog open={ isFirstDialogOpen} onOpenChange={setFirstDialogOpen  }>
         <DialogTrigger asChild>
           <Button variant="outline" onClick={() => setFirstDialogOpen(true)}>
@@ -515,7 +475,7 @@ export default function Dashboard() {
               htmlFor="terms1"
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
-              GPT-3.5-TURBO
+              OPENAI
             </label>
           </div>
           <div className="flex items-center space-x-2">
@@ -527,31 +487,31 @@ export default function Dashboard() {
               htmlFor="terms2"
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
-              GPT-4o
+              ANTHROPIC
             </label>
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox
               id="terms3"
-              onClick={() => handleCheckboxChange("DEEPMIND")}
+              onClick={() => handleCheckboxChange("GOOGLEAI")}
             />
             <label
               htmlFor="terms3"
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
-              GPT-4-TURBO
+              GOOGLEAI
             </label>
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox
               id="terms4"
-              onClick={() => handleCheckboxChange("ANTHROPIC")}
+              onClick={() => handleCheckboxChange("GROQAI")}
             />
             <label
               htmlFor="terms4"
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
-              ANTHROPIC
+              GROQAI
             </label>
           </div>
           <DialogClose asChild>
@@ -563,7 +523,7 @@ export default function Dashboard() {
       </Dialog>
 
       <Dialog open={isSecondDialogOpen} onOpenChange={setSecondDialogOpen}>
-        <DialogContent>
+        <DialogContent className=" max-h-80 overflow-auto">  
           <DialogHeader>
             <DialogTitle>Second Dialog</DialogTitle>
             <DialogDescription>
@@ -574,7 +534,7 @@ export default function Dashboard() {
           <div key={index} className="flex items-center space-x-2">
             <Checkbox
               id="terms1"
-              // onClick={() => handleCheckboxChange("gpt-3.5-turbo")}
+              onClick={() => handleSubCheckboxChange(item)}
             />
             <label
               htmlFor="terms1"
@@ -661,9 +621,9 @@ export default function Dashboard() {
                       Top K <span className="ml-36"> {sliderValues.topK}</span>
                     </Label>
                     <Slider
-                      defaultValue={[0.3]}
-                      max={1}
-                      step={0.1}
+                      defaultValue={[1]}
+                      max={2}
+                      step={1.1}
                       onValueChange={(value) => handleSlider("topK", value)}
                     />
                   </div>
@@ -675,7 +635,7 @@ export default function Dashboard() {
                       <span className="ml-24"> {sliderValues.maxLength}</span>
                     </Label>
                     <Slider
-                      defaultValue={[33]}
+                      defaultValue={[500]}
                       max={4095}
                       step={1}
                       onValueChange={(value) =>
@@ -763,7 +723,7 @@ export default function Dashboard() {
                   className="h-[200px] w-[350px] rounded-md border p-4"
                 >
                   <p className="scroll-m-20 border-b pb-2 text-2xl font-semibold tracking-tight first:mt-0">
-                    {selectedModels[index]}
+                    {selectedmodelsfinal[index]}
                   </p>
                   
                       <p  className="leading-7">
