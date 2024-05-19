@@ -35,17 +35,24 @@ export async function POST(NextRequest) {
     topP: top_p[0],
     topK: top_k[0],
   };
+  let API_KEY;
   for (let i = 0; i < model.length; i++) {
-    if(key.length>i && key[i].startsWith("AIza")){
-    const API_KEY = key[i];
-    
-    const genAI = new GoogleGenerativeAI(API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.0-pro",generationConfig });
-    const result = await model.generateContent(user);
-    const response = await result.response;
-    const text = response.text();
-    res[i] = [text];
-    console.log(text);
+    for (let j = 0; j < key.length; j++) {
+      if (key[j].startsWith("AIza")) {
+        API_KEY = key[j];
+      }
+    }
+    if (model[i] === "gemini-1.0-pro") {
+      const genAI = new GoogleGenerativeAI(API_KEY);
+      const model = genAI.getGenerativeModel({
+        model: "gemini-1.0-pro",
+        generationConfig,
+      });
+      const result = await model.generateContent(user);
+      const response = await result.response;
+      const text = response.text();
+      res[i] = [text];
+      console.log(text);
     }
   }
   return NextResponse.json(res);

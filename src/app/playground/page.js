@@ -83,24 +83,31 @@ export default function Dashboard() {
   const [isFirstDialogOpen, setFirstDialogOpen] = useState(false);
   const [isSecondDialogOpen, setSecondDialogOpen] = useState(false);
 
-  
-
   const handleFirstDialogSubmit = () => {
     setFirstDialogOpen(false);
-   
-    for(let i=0 ; i<selectedModels.length;i++)
-      {
-        console.log(selectedModels[i])
-        if(selectedModels[i]=="OPENAI"){
-         setselectedsubmodels(prev=>[...prev,"gpt-3.5-turbo","gpt-4o","gpt-4-turbo"])
-        }
-        if(selectedModels[i]=="ANTHROPIC"){
-         setselectedsubmodels(prev=>[...prev,"claude-3-opus-20240229","claude-3-sonnet-20240229","claude-3-haiku-20240307"])
-        }
-        if(selectedModels[i]=="GOOGLEAI"){
-         setselectedsubmodels(prev=>[...prev,"gemini-1.0-pro"])
-        }
+
+    for (let i = 0; i < selectedModels.length; i++) {
+      console.log(selectedModels[i]);
+      if (selectedModels[i] == "OPENAI") {
+        setselectedsubmodels((prev) => [
+          ...prev,
+          "gpt-3.5-turbo",
+          "gpt-4o",
+          "gpt-4-turbo",
+        ]);
       }
+      if (selectedModels[i] == "ANTHROPIC") {
+        setselectedsubmodels((prev) => [
+          ...prev,
+          "claude-3-opus-20240229",
+          "claude-3-sonnet-20240229",
+          "claude-3-haiku-20240307",
+        ]);
+      }
+      if (selectedModels[i] == "GOOGLEAI") {
+        setselectedsubmodels((prev) => [...prev, "gemini-1.0-pro"]);
+      }
+    }
     setSecondDialogOpen(true);
   };
 
@@ -117,13 +124,11 @@ export default function Dashboard() {
     setselectedmodelsfinal((prevSelectedModels) => {
       if (prevSelectedModels.includes(model)) {
         return prevSelectedModels.filter((item) => item !== model);
-      }
-      else {
+      } else {
         return [...prevSelectedModels, model];
       }
-
     });
-  }
+  };
   const handleFinalInput = () => {
     return {
       key: inputValues,
@@ -145,33 +150,43 @@ export default function Dashboard() {
     }));
   };
   const handleInputChange = (model, value) => {
-    setInputValues(prev => [...prev,value]);
-  };
+    setInputValues((prev) => [...prev, value]);
 
+  };
+  let responses = [];
   const handleRequest = async () => {
     try {
       const final = handleFinalInput();
       console.log(final);
-      for(let i=0;i<selectedsubmodels.length;i++){
-        if(selectedModels[i]=="GOOGLEAI"){
-      const response = await axios.post("/api/googleai", { final });
-      console.log(response.data);
-      setoutput(prev => [...prev , response.data]);
-        }if(selectedModels[i]=="ANTHROPIC"){
+      for (let i = 0; i < selectedModels.length; i++) {
+        if (selectedModels[i] == "GOOGLEAI") {
+          const response = await axios.post("/api/googleai", { final });
+          // console.log(response.data);
+          console.log(responses);
+          responses.push(...(response.data || []));
+        }
+        if (selectedModels[i] == "ANTHROPIC") {
           const response = await axios.post("/api/anthropic", { final });
-          console.log(response.data);
-          setoutput(prev => [...prev , response.data]);
-      }if(selectedModels[i]=="OPENAI"){
-        const response = await axios.post("/api/openai", { final });
-        console.log(response.data);
-        setoutput(prev => [...prev , response.data]);
+          // console.log(response.data);
+          responses.push(...(response.data || []));
+        }
+        if (selectedModels[i] == "OPENAI") {
+          const response = await axios.post("/api/openai", { final });
+          // console.log(response.data);
+          console.log(responses);
+          responses.push(...(response.data || []));
+        }
       }
-    }
+      console.log(responses);
+      const filteredResponses = responses.filter(
+        (response) => response !== null
+      );
+      setoutput(filteredResponses);
     } catch (error) {
       console.error(error);
     }
   };
-
+  
   return (
     <div className="grid h-screen w-full pl-[53px]">
       <aside className="inset-y fixed  left-0 z-20 flex h-full flex-col border-r">
@@ -413,16 +428,6 @@ export default function Dashboard() {
                   </legend>
                   <div className="grid gap-3">
                     <Label htmlFor="role">Role- System</Label>
-                    {/* <Select defaultValue="system">
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="system">System</SelectItem>
-                        <SelectItem value="user">User</SelectItem>
-                        <SelectItem value="assistant">Assistant</SelectItem>
-                      </SelectContent>
-                    </Select> */}
                   </div>
                   <div className="grid gap-3">
                     <Label htmlFor="content">Content</Label>
@@ -453,104 +458,125 @@ export default function Dashboard() {
                 </legend>
                 <div className="grid gap-3">
                   <Label htmlFor="model">Model</Label>
-                   <Dialog open={ isFirstDialogOpen} onOpenChange={setFirstDialogOpen  }>
-        <DialogTrigger asChild>
-          <Button variant="outline" onClick={() => setFirstDialogOpen(true)}>
-            Select Model
-          </Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Choose Model</DialogTitle>
-            <DialogDescription>
-              Choose your one or more model you want to compare.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="terms1"
-              onClick={() => handleCheckboxChange("OPENAI")}
-            />
-            <label
-              htmlFor="terms1"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              OPENAI
-            </label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="terms2"
-              onClick={() => handleCheckboxChange("ANTHROPIC")}
-            />
-            <label
-              htmlFor="terms2"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              ANTHROPIC
-            </label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="terms3"
-              onClick={() => handleCheckboxChange("GOOGLEAI")}
-            />
-            <label
-              htmlFor="terms3"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              GOOGLEAI
-            </label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="terms4"
-              onClick={() => handleCheckboxChange("GROQAI")}
-            />
-            <label
-              htmlFor="terms4"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              GROQAI
-            </label>
-          </div>
-          <DialogClose asChild>
-            <Button type="button" variant="secondary" onClick={handleFirstDialogSubmit }>
-              Submit
-            </Button>
-          </DialogClose>
-        </DialogContent>
-      </Dialog>
+                  <Dialog
+                    open={isFirstDialogOpen}
+                    onOpenChange={setFirstDialogOpen}
+                  >
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        onClick={() => {setFirstDialogOpen(true); setSelectedModels([]); setselectedsubmodels([]); }}
+                      >
+                        Select Model
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Choose Model</DialogTitle>
+                        <DialogDescription>
+                          Choose your one or more model you want to compare.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="terms1"
+                          onClick={() => handleCheckboxChange("OPENAI")}
+                        />
+                        <label
+                          htmlFor="terms1"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          OPENAI
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="terms2"
+                          onClick={() => handleCheckboxChange("ANTHROPIC")}
+                        />
+                        <label
+                          htmlFor="terms2"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          ANTHROPIC
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="terms3"
+                          onClick={() => handleCheckboxChange("GOOGLEAI")}
+                        />
+                        <label
+                          htmlFor="terms3"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          GOOGLEAI
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="terms4"
+                          onClick={() => handleCheckboxChange("GROQAI")}
+                        />
+                        <label
+                          htmlFor="terms4"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          GROQAI
+                        </label>
+                      </div>
+                      <DialogClose asChild>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={handleFirstDialogSubmit}
+                        >
+                          Next
+                        </Button>
+                      </DialogClose>
+                    </DialogContent>
+                  </Dialog>
 
-      <Dialog open={isSecondDialogOpen} onOpenChange={setSecondDialogOpen}>
-        <DialogContent className=" max-h-80 overflow-auto">  
-          <DialogHeader>
-            <DialogTitle>Second Dialog</DialogTitle>
-            <DialogDescription>
-              This is the second dialog that opens after the first one is closed.         
-            </DialogDescription>
-          </DialogHeader>
-          {selectedsubmodels.map((item, index) => (
-          <div key={index} className="flex items-center space-x-2">
-            <Checkbox
-              id="terms1"
-              onClick={() => handleSubCheckboxChange(item)}
-            />
-            <label
-              htmlFor="terms1"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              {item}
-            </label>
-          </div>
-          ))}
-          <DialogClose asChild>
-            <Button type="button" variant="secondary" onClick={ () => setSecondDialogOpen(false)}>
-              Close
-            </Button>
-          </DialogClose>
-        </DialogContent>
-      </Dialog>
+                  <Dialog
+                    open={isSecondDialogOpen}
+                    onOpenChange={setSecondDialogOpen}
+                  >
+                    <DialogContent className=" max-h-80 overflow-auto">
+                      <DialogHeader>
+                        <DialogTitle>Second Dialog</DialogTitle>
+                        <DialogDescription>
+                          This is the second dialog that opens after the first
+                          one is closed.
+                        </DialogDescription>
+                      </DialogHeader>
+                      {selectedsubmodels.map((item, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center space-x-2"
+                        >
+                          <Checkbox
+                            id="terms1"
+                            onClick={() => handleSubCheckboxChange(item)}
+                          />
+                          <label
+                            htmlFor="terms1"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            {item}
+                          </label>
+                        </div>
+                      ))}
+                      <DialogClose asChild>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => setSecondDialogOpen(false)}
+                        >
+                          Done
+                        </Button>
+                      </DialogClose>
+                    </DialogContent>
+                  </Dialog>
                 </div>
                 <Label htmlFor="model">Credentials</Label>
                 <Dialog>
@@ -567,7 +593,7 @@ export default function Dashboard() {
                     <div className="flex items-center space-x-2">
                       <div className="grid flex-1 gap-2">
                         {selectedModels.map((item, index) => (
-                          <Input
+                          <Input 
                             key={index}
                             onChange={(e) =>
                               handleInputChange(item, e.target.value)
@@ -582,7 +608,7 @@ export default function Dashboard() {
                     {/* <DialogClose asChild> */}
                     <DialogClose asChild>
                       <Button type="button" variant="secondary">
-                        Submit
+                        Done
                       </Button>
                     </DialogClose>
                     {/* </DialogClose> */}
@@ -622,8 +648,9 @@ export default function Dashboard() {
                     </Label>
                     <Slider
                       defaultValue={[1]}
+                      min={1}
                       max={2}
-                      step={1.1}
+                      step={0.1}
                       onValueChange={(value) => handleSlider("topK", value)}
                     />
                   </div>
@@ -637,6 +664,7 @@ export default function Dashboard() {
                     <Slider
                       defaultValue={[500]}
                       max={4095}
+                      min={100}
                       step={1}
                       onValueChange={(value) =>
                         handleSlider("maxLength", value)
@@ -717,18 +745,16 @@ export default function Dashboard() {
               Output
             </Badge>
             <div className="grid gap-2 grid-cols-2    max-h-[70vh] overflow-auto">
-            {
-                    output.map((item, index) => (
-                <ScrollArea key={index}
+              {output.map((item, index) => (
+                <ScrollArea
+                  key={index}
                   className="h-[200px] w-[350px] rounded-md border p-4"
                 >
                   <p className="scroll-m-20 border-b pb-2 text-2xl font-semibold tracking-tight first:mt-0">
                     {selectedmodelsfinal[index]}
                   </p>
-                  
-                      <p  className="leading-7">
-                        {item}
-                      </p>
+
+                  <p className="leading-7">{item}</p>
                 </ScrollArea>
               ))}
             </div>
