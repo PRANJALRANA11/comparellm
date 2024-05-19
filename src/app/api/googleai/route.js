@@ -1,6 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 export async function POST(NextRequest) {
+  try {
+    
+  
   const { final } = await NextRequest.json();
   const {
     key,
@@ -56,4 +59,8 @@ export async function POST(NextRequest) {
     }
   }
   return NextResponse.json(res);
+}
+  catch (error) {
+    return NextResponse.json(error);
+  }
 }

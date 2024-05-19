@@ -18,9 +18,9 @@ import {
   Triangle,
   Turtle,
 } from "lucide-react";
-import { CopyIcon } from "@radix-ui/react-icons";
 
-import { Checkbox } from "@/components/ui/checkbox";
+
+import { Checkbox } from "../../components/ui/checkbox";
 
 import {
   Dialog,
@@ -30,13 +30,13 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogClose,
-} from "@/components/ui/dialog";
+} from "../../components/ui/dialog";
 
-import { Slider } from "@/components/ui/slider";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Slider } from "../../components/ui/slider";
+import { ScrollArea } from "../../components/ui/scroll-area";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "../../components/ui/badge";
+import { Button } from "../../components/ui/button";
 import {
   Drawer,
   DrawerContent,
@@ -44,29 +44,37 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "../../components/ui/drawer";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Skeleton } from "../../components/ui/skeleton.jsx"
+
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+} from "../../components/ui/select";
+import { Textarea } from "../../components/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
   TooltipProvider,
-} from "@/components/ui/tooltip";
+} from "../../components/ui/tooltip";
 import axios from "axios";
 export default function Dashboard() {
   const [selectedModels, setSelectedModels] = useState([]);
   const [inputValues, setInputValues] = useState([]);
   const [selectedsubmodels, setselectedsubmodels] = useState([]);
   const [selectedmodelsfinal, setselectedmodelsfinal] = useState([]);
+  const [output, setoutput] = useState([]);
+  const[loader,setloader]=useState(false)
+  const [isFirstDialogOpen, setFirstDialogOpen] = useState(false);
+  const [isSecondDialogOpen, setSecondDialogOpen] = useState(false);
+  const[error,seterror]= useState("")
+  const[errorflag,seterrorflag]= useState(false)
   const [sliderValues, setSliderValues] = useState({
     temperature: [0.3],
     topP: [0.3],
@@ -79,9 +87,7 @@ export default function Dashboard() {
     system: "",
     user: "",
   });
-  const [output, setoutput] = useState([]);
-  const [isFirstDialogOpen, setFirstDialogOpen] = useState(false);
-  const [isSecondDialogOpen, setSecondDialogOpen] = useState(false);
+
 
   const handleFirstDialogSubmit = () => {
     setFirstDialogOpen(false);
@@ -158,6 +164,7 @@ export default function Dashboard() {
     try {
       const final = handleFinalInput();
       console.log(final);
+      setloader(true)
       for (let i = 0; i < selectedModels.length; i++) {
         if (selectedModels[i] == "GOOGLEAI") {
           const response = await axios.post("/api/googleai", { final });
@@ -182,8 +189,11 @@ export default function Dashboard() {
         (response) => response !== null
       );
       setoutput(filteredResponses);
+      setloader(false)
     } catch (error) {
       console.error(error);
+      seterror(error);
+      seterrorflag(true);
     }
   };
   
@@ -192,7 +202,7 @@ export default function Dashboard() {
       <aside className="inset-y fixed  left-0 z-20 flex h-full flex-col border-r">
         <div className="border-b p-2">
           <Button variant="outline" size="icon" aria-label="Home">
-            <Triangle className="size-5 fill-foreground" />
+            <img src="logo.png"/>
           </Button>
         </div>
         <nav className="grid gap-1 p-2">
@@ -536,6 +546,40 @@ export default function Dashboard() {
                       </DialogClose>
                     </DialogContent>
                   </Dialog>
+                    
+                  <Dialog
+                    open={errorflag}
+                  >
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>ERROR</DialogTitle>
+                        <DialogDescription>
+                        ERROR while fetching response from the server
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="flex items-center space-x-2">
+                        <label
+                          htmlFor="terms1"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          Check your api key 
+                        </label>
+                      </div>
+                    </DialogContent>
+                    <DialogClose asChild></DialogClose>
+                  </Dialog>
+
+
+
+
+
+
+
+
+
+
+
+
 
                   <Dialog
                     open={isSecondDialogOpen}
@@ -745,6 +789,7 @@ export default function Dashboard() {
               Output
             </Badge>
             <div className="grid gap-2 grid-cols-2    max-h-[70vh] overflow-auto">
+            
               {output.map((item, index) => (
                 <ScrollArea
                   key={index}
@@ -796,7 +841,15 @@ export default function Dashboard() {
                     <TooltipContent side="top">Use Microphone</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-                <Button
+                {loader ?  <Button
+                  type="submit"
+                  size="sm"
+                  className="ml-auto gap-1.5"
+                  onClick={handleRequest}
+                >
+                  loading ...
+                  <CornerDownLeft className="size-3.5" />
+                </Button> :<Button
                   type="submit"
                   size="sm"
                   className="ml-auto gap-1.5"
@@ -804,7 +857,8 @@ export default function Dashboard() {
                 >
                   Send Message
                   <CornerDownLeft className="size-3.5" />
-                </Button>
+                </Button>}
+               
               </div>
             </div>
           </div>

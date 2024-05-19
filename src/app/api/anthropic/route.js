@@ -2,6 +2,9 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 
 export async function POST(NextRequest) {
+  try {
+    
+  
   const { final } = await NextRequest.json();
   const {
     key,
@@ -57,4 +60,8 @@ export async function POST(NextRequest) {
     }
   }
   return NextResponse.json(msg);
+}
+  catch (error) {
+    return NextResponse.json(error);
+  }
 }
