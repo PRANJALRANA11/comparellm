@@ -35,7 +35,7 @@ export async function POST(req) {
     let openai;
     for (let i = 0; i < model.length; i++) {
       for (let j = 0; j < key.length; j++) {
-        if (key[j].startsWith("sk-")) {
+        if (key[j].startsWith("sk-proj")) {
           openai = new OpenAI({
             apiKey: key[j],
           });

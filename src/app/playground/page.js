@@ -113,6 +113,9 @@ export default function Dashboard() {
       if (selectedModels[i] == "GOOGLEAI") {
         setselectedsubmodels((prev) => [...prev, "gemini-1.0-pro"]);
       }
+      if (selectedModels[i] == "GROQ") {
+        setselectedsubmodels((prev) => [...prev, "llama3-8b-8192","llama3-70b-8192","mixtral-8x7b-32768","gemma-7b-it"]);
+      }
     }
     setSecondDialogOpen(true);
   };
@@ -179,6 +182,12 @@ export default function Dashboard() {
         }
         if (selectedModels[i] == "OPENAI") {
           const response = await axios.post("/api/openai", { final });
+          // console.log(response.data);
+          console.log(responses);
+          responses.push(...(response.data || []));
+        }
+        if (selectedModels[i] == "GROQ") {
+          const response = await axios.post("/api/groq", { final });
           // console.log(response.data);
           console.log(responses);
           responses.push(...(response.data || []));
@@ -526,7 +535,7 @@ export default function Dashboard() {
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id="terms4"
-                          onClick={() => handleCheckboxChange("GROQAI")}
+                          onClick={() => handleCheckboxChange("GROQ")}
                         />
                         <label
                           htmlFor="terms4"
@@ -534,6 +543,7 @@ export default function Dashboard() {
                         >
                           GROQAI
                         </label>
+                        
                       </div>
                       <DialogClose asChild>
                         <Button

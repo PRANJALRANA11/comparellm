@@ -29,13 +29,13 @@ export async function POST(NextRequest) {
     top_p[0],
     top_k[0]
   );
-  let msg;
+  let res=[];
   let anthropic;
   for (let i = 0; i < model.length; i++) {
     for (let j = 0; j < key.length; j++) {
-      if (key[j].startsWith("AIza")) {
+      if (key[j].startsWith("sk-ant-api")) {
         anthropic = new Anthropic({
-          apiKey: key,
+          apiKey: key[i],
         });
       }
     }
@@ -46,7 +46,7 @@ export async function POST(NextRequest) {
         "claude-3-haiku-20240307",
       ].includes(model[i])
     ) {
-      msg = await anthropic.messages.create({
+      let msg = await anthropic.messages.create({
         model: model[i],
         max_tokens: max_tokens[0],
         temperature: temperature[0],
@@ -55,11 +55,11 @@ export async function POST(NextRequest) {
         system: system,
         messages: [{ role: "user", content: user }],
       });
-      console.log(msg);
-      res[i] = [msg];
+      console.log(msg.content[0].text);
+      res[i] = [msg.content[0].text];
     }
   }
-  return NextResponse.json(msg);
+  return NextResponse.json(res);
 }
   catch (error) {
     return NextResponse.json(error);

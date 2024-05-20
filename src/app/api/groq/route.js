@@ -21,13 +21,13 @@ export async function POST(NextRequest) {
     let groq;
     for (let i = 0; i < model.length; i++) {
       for (let j = 0; j < key.length; j++) {
-        if (key[j].startsWith("AIza")) {
+        if (key[j].startsWith("gsk")) {
           groq = new Groq({
             apiKey: key[j],
           });
         }
       }
-      if (["gpt-4o", "gpt-3.5-turbo", "gpt-4-turbo"].includes(model[i])) {
+      if (["llama3-70b-8192","llama3-8b-8192", "mixtral-8x7b-32768", "gemma-7b-it"].includes(model[i])) {
         const chatCompletion = await groq.chat.completions.create({
           messages: [
             {
@@ -45,7 +45,7 @@ export async function POST(NextRequest) {
           top_p: top_p[0],
           stop: null,
         });
-        res[i] = [chatCompletion.choices[0]?.message?.content || ""];
+        res[i] = [chatCompletion.choices[0]?.message?.content];
       }
     }
 
