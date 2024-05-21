@@ -35,7 +35,7 @@ export async function POST(NextRequest) {
     for (let j = 0; j < key.length; j++) {
       if (key[j].startsWith("sk-ant-api")) {
         anthropic = new Anthropic({
-          apiKey: key[i],
+          apiKey: key[j],
         });
       }
     }

@@ -177,7 +177,7 @@ export default function Dashboard() {
         }
         if (selectedModels[i] == "ANTHROPIC") {
           const response = await axios.post("/api/anthropic", { final });
-          // console.log(response.data);
+          console.log(response.data);
           responses.push(...(response.data || []));
         }
         if (selectedModels[i] == "OPENAI") {
