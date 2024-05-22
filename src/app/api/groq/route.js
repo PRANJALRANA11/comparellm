@@ -45,6 +45,7 @@ export async function POST(NextRequest) {
           top_p: top_p[0],
           stop: null,
         });
+        console.log(chatCompletion.choices[0]?.message?.content);
         res[i] = [chatCompletion.choices[0]?.message?.content];
       }
     }
